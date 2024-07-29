@@ -1,7 +1,9 @@
-Description:
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
   This template is built and deployed by the infrastructure pipeline in various stages (staging/production) as required.
-  It specifies the resources that need to be created, like the SageMaker Endpoint. It can be extended to include resources like
-  AutoScalingPolicy, API Gateway, etc,. as required.
+  It specifies the resources that need to be created, like the SageMaker Endpoint with AutoScaling. It can be extended to include resources like
+  API Gateway, etc,. as required.
+
 Parameters:
   SageMakerProjectName:
     Type: String
@@ -21,9 +23,7 @@ Parameters:
     Description: The trained Model Package Name
   StageName:
     Type: String
-    Description:
-      The name for a project pipeline stage, such as Staging or Prod, for
-      which resources are provisioned and deployed.
+    Description: The name for a project pipeline stage, such as Staging or Prod, for which resources are provisioned and deployed.
   EndpointInstanceCount:
     Type: Number
     Description: Number of instances to launch for the endpoint.
@@ -33,12 +33,30 @@ Parameters:
     Description: The ML compute instance type for the endpoint.
   S3OutputPath:
     Type: String
-    Description:
-      The output path in S3 for async inference
+    Description: The output path in S3 for async inference
   TestInputPath:
     Type: String
-    Description:
-      The S3 path to the file used in the test
+    Description: The S3 path to the file used in the test
+  MinCapacity:
+    Type: Number
+    Description: Minimum number of instances for auto scaling
+    Default: 0
+  MaxCapacity:
+    Type: Number
+    Description: Maximum number of instances for auto scaling
+    Default: 5
+  ScaleInCooldown:
+    Type: Number
+    Description: The cooldown period (in seconds) before allowing further scale in activities
+    Default: 10
+  ScaleOutCooldown:
+    Type: Number
+    Description: The cooldown period (in seconds) before allowing further scale out activities
+    Default: 10
+  TargetValue:
+    Type: Number
+    Description: Target value for the metric used in scaling policy
+    Default: 5
 
 Resources:
   # SNS Topics
@@ -46,6 +64,7 @@ Resources:
     Type: AWS::SNS::Topic
   SNSTopicSuccess:
     Type: AWS::SNS::Topic
+
   # SageMaker Model
   Model:
     Type: AWS::SageMaker::Model
@@ -53,6 +72,7 @@ Resources:
       Containers:
          - ModelPackageName: !Ref ModelPackageName
       ExecutionRoleArn: !Ref ModelExecutionRoleArn
+
   # SageMaker Endpoint Configuration
   EndpointConfig:
     Type: AWS::SageMaker::EndpointConfig
@@ -61,8 +81,8 @@ Resources:
         OutputConfig:
           NotificationConfig:
             ErrorTopic: !Ref SNSTopicError
-            SuccessTopic: !Ref SNSTopicError
-          S3OutputPath:  !Ref S3OutputPath
+            SuccessTopic: !Ref SNSTopicSuccess
+          S3OutputPath: !Ref S3OutputPath
       ProductionVariants:
         - InitialInstanceCount: !Ref EndpointInstanceCount
           InitialVariantWeight: 1.0
@@ -76,6 +96,7 @@ Resources:
           Value: !Ref SageMakerProjectId
         - Key: sagemaker:deployment-stage
           Value: !Ref StageName
+
   # SageMaker Endpoint
   Endpoint:
     Type: AWS::SageMaker::Endpoint
@@ -89,6 +110,37 @@ Resources:
           Value: !Ref SageMakerProjectId
         - Key: sagemaker:deployment-stage
           Value: !Ref StageName
+
+  # Auto Scaling Target
+  ScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: !Ref MaxCapacity
+      MinCapacity: !Ref MinCapacity
+      ResourceId: !Sub endpoint/${Endpoint.EndpointName}/variant/AllTraffic
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/sagemaker.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_SageMakerEndpoint
+      ScalableDimension: sagemaker:variant:DesiredInstanceCount
+      ServiceNamespace: sagemaker
+
+  # Auto Scaling Policy
+  ScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub ${SageMakerProjectName}-${StageName}-ScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: !Ref TargetValue
+        ScaleInCooldown: !Ref ScaleInCooldown
+        ScaleOutCooldown: !Ref ScaleOutCooldown
+        CustomizedMetricSpecification:
+          MetricName: ApproximateBacklogSize
+          Namespace: AWS/SageMaker
+          Dimensions:
+            - Name: EndpointName
+              Value: !Sub ${SageMakerProjectName}-${StageName}
+          Statistic: Average
+
 Outputs:
   ModelName:
     Description: Name of the SageMaker Model
