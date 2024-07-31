@@ -13,6 +13,9 @@ Parameters:
   SourceModelPackageGroupName:
     Type: String
     Description: Name of the ModelPackageGroup for which deployments should be triggered for
+  EndpointInstanceType:
+    Type: String
+    Description: Name of the EndpointInstanceType
  
 Resources:
 
@@ -110,6 +113,8 @@ Resources:
            Value: !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
          - Name: SOURCE_MODEL_PACKAGE_GROUP_NAME
            Value: !Ref SourceModelPackageGroupName
+         - Name: ENDPOINT_INSTANCE_TYPE
+           Value: !Ref EndpointInstanceType
          - Name: AWS_REGION
            Value: !Ref AWS::Region
          # these values are used by the build system to output to the output artifacts.
