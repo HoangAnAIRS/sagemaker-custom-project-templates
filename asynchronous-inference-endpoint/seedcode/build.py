@@ -74,7 +74,7 @@ def extend_config(args, model_package_arn, stage_config):
         "SageMakerProjectId": args.sagemaker_project_id,
         "ModelPackageName": model_package_arn,
         "ModelExecutionRoleArn": args.model_execution_role,
-        "EndpointInstanceType": args.endpoint_instance_type
+        # "EndpointInstanceType": args.endpoint_instance_type
     }
     new_tags = {
         "sagemaker:deployment-stage": stage_config["Parameters"]["StageName"],
