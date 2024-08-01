@@ -74,7 +74,9 @@ def extend_config(args, model_package_arn, stage_config):
         "SageMakerProjectId": args.sagemaker_project_id,
         "ModelPackageName": model_package_arn,
         "ModelExecutionRoleArn": args.model_execution_role,
-        "EndpointInstanceType": args.endpoint_instance_type
+        "EndpointInstanceType": args.endpoint_instance_type,
+        "S3OutputPath": args.s3_output_path,
+        "S3FailurePath": args.s3_failure_path
     }
     new_tags = {
         "sagemaker:deployment-stage": stage_config["Parameters"]["StageName"],
@@ -131,17 +133,15 @@ if __name__ == "__main__":
     parser.add_argument("--model-execution-role", type=str, required=True)
     parser.add_argument("--model-package-group-name", type=str, required=True)
     parser.add_argument("--endpoint-instance-type", type=str, required=True)
+    parser.add_argument("--s3-output-path", type=str, required=True)
+    parser.add_argument("--s3-failure-path", type=str, required=True)
     parser.add_argument("--sagemaker-project-id", type=str, required=True)
     parser.add_argument("--sagemaker-project-name", type=str, required=True)
     parser.add_argument("--sagemaker-project-arn", type=str, required=False)
     parser.add_argument("--import-staging-config", type=str, default="staging-config.json")
-    parser.add_argument("--import-prod-config", type=str, default="prod-config.json")
     parser.add_argument("--export-staging-config", type=str, default="staging-config-export.json")
     parser.add_argument("--export-staging-params", type=str, default="staging-params-export.json")
     parser.add_argument("--export-staging-tags", type=str, default="staging-tags-export.json")
-    parser.add_argument("--export-prod-config", type=str, default="prod-config-export.json")
-    parser.add_argument("--export-prod-params", type=str, default="prod-params-export.json")
-    parser.add_argument("--export-prod-tags", type=str, default="prod-tags-export.json")
     parser.add_argument("--export-cfn-params-tags", type=bool, default=False)
     args, _ = parser.parse_known_args()
 
@@ -160,12 +160,3 @@ if __name__ == "__main__":
         json.dump(staging_config, f, indent=4)
     if (args.export_cfn_params_tags):
       create_cfn_params_tags_file(staging_config, args.export_staging_params, args.export_staging_tags)
-
-    # Write the prod config for code pipeline
-    with open(args.import_prod_config, "r") as f:
-        prod_config = extend_config(args, model_package_arn, json.load(f))
-    logger.debug("Prod config: {}".format(json.dumps(prod_config, indent=4)))
-    with open(args.export_prod_config, "w") as f:
-        json.dump(prod_config, f, indent=4)
-    if (args.export_cfn_params_tags):
-      create_cfn_params_tags_file(prod_config, args.export_prod_params, args.export_prod_tags)

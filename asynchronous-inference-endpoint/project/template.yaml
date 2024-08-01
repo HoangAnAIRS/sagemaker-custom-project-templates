@@ -16,6 +16,14 @@ Parameters:
   EndpointInstanceType:
     Type: String
     Description: Name of the EndpointInstanceType
+  S3OutputPath:
+    Type: String
+    Description: The output path in S3 for async inference
+  S3FailurePath:
+    Type: String
+    Description: The output path in S3 for async inference
+
+    
  
 Resources:
 
@@ -115,6 +123,10 @@ Resources:
            Value: !Ref SourceModelPackageGroupName
          - Name: ENDPOINT_INSTANCE_TYPE
            Value: !Ref EndpointInstanceType
+         - Name: S3_OUTPUT_PATH
+           Value: !Ref S3OutputPath
+         - Name: S3_FAILURE_PATH
+           Value: !Ref S3FailurePath
          - Name: AWS_REGION
            Value: !Ref AWS::Region
          # these values are used by the build system to output to the output artifacts.
@@ -128,36 +140,6 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: buildspec.yml
-      TimeoutInMinutes: 30
-
-  ModelDeployTestProject:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      # Max length: 255 chars
-      Name: !Sub sagemaker-${SageMakerProjectName}-${SageMakerProjectId}-testing # max: 10+33+15+7=65
-      Description: Test the deployment endpoint
-      ServiceRole:
-        !Join [ ':', [ 'arn', !Ref 'AWS::Partition', 'iam:', !Ref 'AWS::AccountId', 'role/service-role/AmazonSageMakerServiceCatalogProductsUseRole'] ]
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
-        EnvironmentVariables:
-          - Name: SAGEMAKER_PROJECT_NAME
-            Value: !Ref SageMakerProjectName
-          - Name: SAGEMAKER_PROJECT_ID
-            Value: !Ref SageMakerProjectId
-          - Name: AWS_REGION
-            Value: !Ref "AWS::Region"
-          - Name: BUILD_CONFIG
-            Value: staging-config-export.json
-          - Name: EXPORT_TEST_RESULTS
-            Value: test-results.json
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: test/buildspec.yml
       TimeoutInMinutes: 30
 
   ModelDeployPipeline:
