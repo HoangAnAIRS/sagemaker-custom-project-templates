@@ -3,7 +3,6 @@
     "StageName": "staging",
     "EndpointInstanceCount": "1",
     "EndpointInstanceType": "ml.m5.large",
-    "S3OutputPath":"s3://machine-learning-storage-dev/image-search/output/coco-detection-service/inference-success",
-    "TestInputPath":"s3://machine-learning-storage-dev/image-search/input/coco-yolov8-service-async"
+    "S3OutputPath":"s3://machine-learning-storage-dev/image-search/output/coco-detection-service/inference-success"
   }
 }

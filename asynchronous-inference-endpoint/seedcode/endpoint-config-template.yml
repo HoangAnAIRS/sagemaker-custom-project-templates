@@ -34,9 +34,9 @@ Parameters:
   S3OutputPath:
     Type: String
     Description: The output path in S3 for async inference
-  TestInputPath:
+  S3FailurePath:
     Type: String
-    Description: The S3 path to the file used in the test
+    Description: The output path in S3 for async inference  when there is a failure
   MinCapacity:
     Type: Number
     Description: Minimum number of instances for auto scaling
@@ -83,6 +83,7 @@ Resources:
             ErrorTopic: !Ref SNSTopicError
             SuccessTopic: !Ref SNSTopicSuccess
           S3OutputPath: !Ref S3OutputPath
+          S3FailurePath: !Ref S3FailurePath
       ProductionVariants:
         - InitialInstanceCount: !Ref EndpointInstanceCount
           InitialVariantWeight: 1.0
