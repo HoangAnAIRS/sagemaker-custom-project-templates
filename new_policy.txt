@@ -1,0 +1,20 @@
+policy_name = 'Invocations-ScalingPolicy'
+response = autoscaling_client.put_scaling_policy(
+    PolicyName=policy_name,
+    ServiceNamespace='sagemaker',
+    ResourceId=resource_id, 
+    ScalableDimension='sagemaker:variant:DesiredInstanceCount', # SageMaker supports only instance count scaling
+    PolicyType='TargetTrackingScaling',
+    TargetTrackingScalingPolicyConfiguration={
+        'TargetValue': 0.5,
+        "CustomizedMetricSpecification": {
+            "MetricName": "HasBacklogWithoutCapacity",
+            "Namespace": "AWS/SageMaker",
+            "Dimensions": [{"Name": "EndpointName", "Value": endpoint_name}],
+            "Statistic": "Maximum",
+        },
+        'ScaleOutCooldown': 0,
+        'ScaleInCooldown': 30
+    }
+)
+

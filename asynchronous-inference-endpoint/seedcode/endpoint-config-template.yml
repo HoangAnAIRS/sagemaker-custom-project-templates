@@ -9,7 +9,7 @@ Parameters:
     Type: String
     Description: Name of the project
     MinLength: 1
-    MaxLength: 32
+    MaxLength: 100
     AllowedPattern: ^[a-zA-Z](-*[a-zA-Z0-9])*
   SageMakerProjectId:
     Type: String
@@ -48,15 +48,15 @@ Parameters:
   ScaleInCooldown:
     Type: Number
     Description: The cooldown period (in seconds) before allowing further scale in activities
-    Default: 10
+    Default: 30
   ScaleOutCooldown:
     Type: Number
     Description: The cooldown period (in seconds) before allowing further scale out activities
-    Default: 10
+    Default: 0
   TargetValue:
     Type: Number
     Description: Target value for the metric used in scaling policy
-    Default: 5
+    Default: 0.5
   SNSTopicSuccessArn:
     Type: String
     Description: ARN of the existing SNS topic for success notifications.
@@ -104,7 +104,7 @@ Resources:
   Endpoint:
     Type: AWS::SageMaker::Endpoint
     Properties:
-      EndpointName: !Sub ${SageMakerProjectName}-${StageName}
+      EndpointName: !Sub ${SageMakerProjectName}
       EndpointConfigName: !GetAtt EndpointConfig.EndpointConfigName
       Tags:
         - Key: sagemaker:project-name
@@ -129,7 +129,7 @@ Resources:
   ScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
-      PolicyName: !Sub ${SageMakerProjectName}-${StageName}-ScalingPolicy
+      PolicyName: !Sub ${SageMakerProjectName}-ScalingPolicy
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref ScalableTarget
       TargetTrackingScalingPolicyConfiguration:
@@ -137,12 +137,12 @@ Resources:
         ScaleInCooldown: !Ref ScaleInCooldown
         ScaleOutCooldown: !Ref ScaleOutCooldown
         CustomizedMetricSpecification:
-          MetricName: ApproximateBacklogSize
+          MetricName: HasBacklogWithoutCapacity
           Namespace: AWS/SageMaker
           Dimensions:
             - Name: EndpointName
-              Value: !Sub ${SageMakerProjectName}-${StageName}
-          Statistic: Average
+              Value: !Sub ${SageMakerProjectName}
+          Statistic: Maximum
 
 Outputs:
   ModelName:
