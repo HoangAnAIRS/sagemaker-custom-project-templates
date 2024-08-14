@@ -57,14 +57,16 @@ Parameters:
     Type: Number
     Description: Target value for the metric used in scaling policy
     Default: 5
+  SNSTopicSuccessArn:
+    Type: String
+    Description: ARN of the existing SNS topic for success notifications.
+    Default: arn:aws:sns:ap-northeast-1:250506505253:image-search-module-success
+  SNSTopicFailureArn:
+    Type: String
+    Description: ARN of the existing SNS topic for failure notifications.
+    Default: arn:aws:sns:ap-northeast-1:250506505253:image-search-module-fail
 
 Resources:
-  # SNS Topics
-  SNSTopicError:
-    Type: AWS::SNS::Topic
-  SNSTopicSuccess:
-    Type: AWS::SNS::Topic
-
   # SageMaker Model
   Model:
     Type: AWS::SageMaker::Model
@@ -80,8 +82,8 @@ Resources:
       AsyncInferenceConfig:
         OutputConfig:
           NotificationConfig:
-            ErrorTopic: !Ref SNSTopicError
-            SuccessTopic: !Ref SNSTopicSuccess
+            ErrorTopic: !Ref SNSTopicFailureArn
+            SuccessTopic: !Ref SNSTopicSuccessArn
           S3OutputPath: !Ref S3OutputPath
           S3FailurePath: !Ref S3FailurePath
       ProductionVariants:
@@ -151,7 +153,7 @@ Outputs:
     Value: !GetAtt Endpoint.EndpointName
   SNSTopicSuccessName:
     Description: The name of the SNS topic for Success
-    Value: !GetAtt SNSTopicSuccess.TopicName
+    Value: !Ref SNSTopicSuccessArn
   SNSTopicErrorName:
     Description: The name of the SNS topic for Errors
-    Value: !GetAtt SNSTopicError.TopicName
+    Value: !Ref SNSTopicFailureArn
