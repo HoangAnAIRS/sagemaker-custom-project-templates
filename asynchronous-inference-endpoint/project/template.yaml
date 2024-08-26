@@ -16,6 +16,10 @@ Parameters:
   EndpointInstanceType:
     Type: String
     Description: Name of the EndpointInstanceType
+  MaxCapacity:
+    Type: Number
+    Description: Maximum number of instances for auto scaling
+    Default: 5
   S3OutputPath:
     Type: String
     Description: The output path in S3 for async inference
@@ -24,7 +28,7 @@ Parameters:
     Description: The output path in S3 for async inference
 
     
- 
+
 Resources:
 
   MlOpsArtifactsBucket:
@@ -123,6 +127,8 @@ Resources:
            Value: !Ref SourceModelPackageGroupName
          - Name: ENDPOINT_INSTANCE_TYPE
            Value: !Ref EndpointInstanceType
+         - Name: MAX_CAPACITY
+           Value: !Ref MaxCapacity
          - Name: S3_OUTPUT_PATH
            Value: !Ref S3OutputPath
          - Name: S3_FAILURE_PATH

@@ -52,7 +52,7 @@ Parameters:
   ScaleOutCooldown:
     Type: Number
     Description: The cooldown period (in seconds) before allowing further scale out activities
-    Default: 0
+    Default: 30
   TargetValue:
     Type: Number
     Description: Target value for the metric used in scaling policy
@@ -137,7 +137,7 @@ Resources:
         ScaleInCooldown: !Ref ScaleInCooldown
         ScaleOutCooldown: !Ref ScaleOutCooldown
         CustomizedMetricSpecification:
-          MetricName: HasBacklogWithoutCapacity
+          MetricName: ApproximateAgeOfOldestRequest
           Namespace: AWS/SageMaker
           Dimensions:
             - Name: EndpointName

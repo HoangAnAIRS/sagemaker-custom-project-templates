@@ -75,6 +75,7 @@ def extend_config(args, model_package_arn, stage_config):
         "ModelPackageName": model_package_arn,
         "ModelExecutionRoleArn": args.model_execution_role,
         "EndpointInstanceType": args.endpoint_instance_type,
+        "MaxCapacity": args.max_capacity,
         "S3OutputPath": args.s3_output_path,
         "S3FailurePath": args.s3_failure_path
     }
@@ -133,6 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("--model-execution-role", type=str, required=True)
     parser.add_argument("--model-package-group-name", type=str, required=True)
     parser.add_argument("--endpoint-instance-type", type=str, required=True)
+    parser.add_argument("--max-capacity", type=str, required=True)
     parser.add_argument("--s3-output-path", type=str, required=True)
     parser.add_argument("--s3-failure-path", type=str, required=True)
     parser.add_argument("--sagemaker-project-id", type=str, required=True)
