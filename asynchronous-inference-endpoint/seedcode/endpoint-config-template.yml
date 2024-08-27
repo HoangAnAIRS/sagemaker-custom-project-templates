@@ -56,7 +56,7 @@ Parameters:
   TargetValue:
     Type: Number
     Description: Target value for the metric used in scaling policy
-    Default: 0.5
+    Default: 60
   SNSTopicSuccessArn:
     Type: String
     Description: ARN of the existing SNS topic for success notifications.
